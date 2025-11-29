@@ -32,7 +32,7 @@ The first purpose of the capstone project is to give a chance to revise all the 
 
 ## Reason for picking up this project
 
-Expain how this project is aligned with this course content.
+Explain how this project is aligned with this course content.
 
 ## Video Summary Link: 
 
