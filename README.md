@@ -24,15 +24,30 @@ The first purpose of the capstone project is to give a chance to revise all the 
 
 # Project report Template
 
-## Title: [your title goes here]
+## Title: Intelligent Multi-Tool AI Agent with Autonomous Decision Making
 
 ## Overview
 
-[your overview goes here. My project does this that  etc]
+This project implements an intelligent AI agent that autonomously decides which tools to use based on user queries. The agent integrates three powerful capabilities:
+
+ 1 Web Search - For current events, real-time data, and recent information
+ 2 RAG (Retrieval Augmented Generation) - For searching through uploaded documents (PDFs and text files)
+ 3 Direct Knowledge - For general questions that don't require external tools
+
+The system uses LangGraph to create a stateful workflow where the LLM intelligently routes queries to appropriate tools without manual intervention. Users can interact through a Streamlit frontend that connects to a FastAPI backend, which orchestrates the LangGraph agent.
 
 ## Reason for picking up this project
 
-Explain how this project is aligned with this course content.
+This project aligns perfectly with the MAT496 course content by incorporating all major topics:
+
+ ->Prompting: System prompts guide the agent's behavior and tool selection strategy
+ ->Structured Output: The agent processes and formats responses from multiple sources
+ ->Semantic Search: FAISS vector store enables similarity-based document retrieval
+ ->RAG (Retrieval Augmented Generation): Documents are chunked, embedded, and retrieved based on query relevance
+ ->Tool Calling LLMs: The agent autonomously decides when to call web search or document search tools
+ ->LangGraph: Complete implementation with custom state management, nodes, conditional edges, and workflow compilation
+
+The creativity lies in building an autonomous decision-making system where the LLM acts as an intelligent router, eliminating the need for manual tool selection. This mimics real-world AI assistants that seamlessly switch between different information sources.
 
 ## Video Summary Link: 
 
@@ -50,11 +65,12 @@ Make a short -  3-5 min video of yourself, put it on youtube/googledrive, and pu
 
 I plan to execute these steps to complete my project.
 
-- [TODO] Step 1 involves blah blah
-- [TODO] Step 2 involves blah blah
-- [TODO] Step 3 involves blah blah
-- ...
-- [TODO] Step n involves blah blah
+[DONE] Step 1: Implement RAG Pipeline Foundation (ai_agent.py) - Set up FAISS vector store with HuggingFace embeddings, implement document loading for PDFs and text files, create text chunking with RecursiveCharacterTextSplitter, and build the initialize_rag function to process uploaded documents
+[TODO] Step 2: Create Custom Tools for Agent (ai_agent.py) - Define the search_documents tool using @tool decorator for RAG functionality, integrate TavilySearchResults for web search capability, write clear tool descriptions to guide LLM decision-making, and implement error handling for both tools
+[TODO] Step 3: Build LangGraph Workflow Structure (ai_agent.py) - Define AgentState with annotated message sequences, create call_model node function for LLM invocation with tool binding, implement should_continue conditional function for routing logic, and set up the StateGraph with proper entry points and edges
+[TODO] Step 4: Implement Autonomous Agent Logic (ai_agent.py) - Create the create_langgraph_agent function to compile the workflow, write enhanced system prompts for intelligent tool selection, implement get_response_from_ai_agent as the main entry point, and add logic for the LLM to autonomously choose between web search, RAG, or direct answers
+[TODO] Step 5: Develop FastAPI Backend (backend.py) - Create RESTful API endpoints for chat, document upload, and health checks, implement CORS middleware for frontend communication, handle document processing and vector store initialization, and manage global state for document availability tracking
+[TODO] Step 6: Create Streamlit Frontend (frontend.py) - Build an intuitive user interface with model selection and configuration options, implement document upload functionality with drag-and-drop support, create real-time chat interface with response display, and add visual indicators for RAG status and tool usage
 
 ## Conclusion:
 
