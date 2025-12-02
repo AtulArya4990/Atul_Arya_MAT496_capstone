@@ -2,36 +2,44 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-from typing import Annotated, TypedDict, Sequence
+from typing import Annotated, TypedDict, Sequence, Optional
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_core.tools import tool
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
+from langchain_core.tools import tool
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 import tempfile
 
+
 vector_store = None
 
+class AgentState(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], add_messages]
+
 def initialize_rag(uploaded_files):
+    """Initialize RAG pipeline with uploaded documents"""
     global vector_store
     
     if not uploaded_files:
         return None
     
+    
     documents = []
     for uploaded_file in uploaded_files:
+       
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.name)[1]) as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
             tmp_path = tmp_file.name
         
         try:
+            
             if uploaded_file.name.endswith('.pdf'):
                 loader = PyPDFLoader(tmp_path)
             elif uploaded_file.name.endswith('.txt'):
@@ -42,16 +50,19 @@ def initialize_rag(uploaded_files):
             docs = loader.load()
             documents.extend(docs)
         finally:
+            
             os.unlink(tmp_path)
     
     if not documents:
         return None
     
+   
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=200
     )
     splits = text_splitter.split_documents(documents)
+    
     
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     vector_store = FAISS.from_documents(splits, embeddings)
@@ -80,10 +91,8 @@ def search_documents(query: str) -> str:
     except Exception as e:
         return f"Error: {str(e)}"
 
-class AgentState(TypedDict):
-    messages: Annotated[Sequence[BaseMessage], add_messages]
-
 def call_model(state: AgentState, llm, tools):
+    """Node that calls the LLM with tool binding"""
     messages = state["messages"]
     
     if tools:
@@ -95,6 +104,7 @@ def call_model(state: AgentState, llm, tools):
     return {"messages": [response]}
 
 def should_continue(state: AgentState):
+    """Determine if we should continue to tools or end"""
     messages = state["messages"]
     last_message = messages[-1]
     
@@ -103,6 +113,9 @@ def should_continue(state: AgentState):
     return "end"
 
 def create_langgraph_agent(llm, system_prompt, has_documents=False):
+    """Create a LangGraph agent with web search and RAG tools"""
+    
+    
     tools = [TavilySearchResults(max_results=3)]
     
     if has_documents:
@@ -124,6 +137,8 @@ def create_langgraph_agent(llm, system_prompt, has_documents=False):
     return app
 
 def get_response_from_ai_agent(llm_id, query, system_prompt, provider, has_documents=False):
+    """Main function to get response from the AI agent"""
+    
     print(f"Agent called with has_documents={has_documents}")
     
     if provider == "groq":
