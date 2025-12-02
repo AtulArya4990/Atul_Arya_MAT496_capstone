@@ -2,6 +2,8 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_core.tools import tool
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -48,3 +50,25 @@ def initialize_rag(uploaded_files):
     vector_store = FAISS.from_documents(splits, embeddings)
     
     return vector_store
+
+@tool
+def search_documents(query: str) -> str:
+    """Search uploaded documents. ALWAYS use this tool when user asks about uploaded files, documents, or their content."""
+    global vector_store
+    
+    if vector_store is None:
+        return "No documents uploaded."
+    
+    try:
+        docs = vector_store.similarity_search(query, k=3)
+        
+        if not docs:
+            return "No relevant information found in documents."
+        
+        results = []
+        for i, doc in enumerate(docs, 1):
+            results.append(f"Excerpt {i}:\n{doc.page_content}\n")
+        
+        return "\n".join(results)
+    except Exception as e:
+        return f"Error: {str(e)}"
