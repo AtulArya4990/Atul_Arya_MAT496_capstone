@@ -3,9 +3,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from typing import Annotated, TypedDict, Sequence
+from langchain_groq import ChatGroq
+from langchain_openai import ChatOpenAI
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.tools import tool
-from langchain_core.messages import BaseMessage, AIMessage
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
@@ -120,3 +122,44 @@ def create_langgraph_agent(llm, system_prompt, has_documents=False):
     app = workflow.compile()
     
     return app
+
+def get_response_from_ai_agent(llm_id, query, system_prompt, provider, has_documents=False):
+    print(f"Agent called with has_documents={has_documents}")
+    
+    if provider == "groq":
+        llm = ChatGroq(model=llm_id, temperature=0)
+    elif provider == "openai":
+        llm = ChatOpenAI(model=llm_id, temperature=0)
+    else:
+        raise ValueError(f"Unsupported provider: {provider}")
+    
+    agent = create_langgraph_agent(llm, system_prompt, has_documents)
+    
+    tool_instructions = """
+You have access to a web search tool for current information."""
+    
+    if has_documents:
+        tool_instructions += """
+IMPORTANT: You also have a 'search_documents' tool to search uploaded documents.
+When the user asks about uploaded files or documents, you MUST use the search_documents tool first."""
+    
+    enhanced_system_prompt = f"""{system_prompt}
+
+{tool_instructions}
+
+Choose the right tool based on the query."""
+    
+    messages = [
+        SystemMessage(content=enhanced_system_prompt),
+        HumanMessage(content=query)
+    ]
+    
+    initial_state = {"messages": messages}
+    result = agent.invoke(initial_state)
+    final_messages = result.get("messages", [])
+    
+    for message in reversed(final_messages):
+        if isinstance(message, AIMessage):
+            return message.content
+    
+    return "No response generated"
