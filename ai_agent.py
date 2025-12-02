@@ -2,8 +2,13 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+from typing import Annotated, TypedDict, Sequence
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.tools import tool
+from langchain_core.messages import BaseMessage, AIMessage
+from langgraph.graph import StateGraph, END
+from langgraph.graph.message import add_messages
+from langgraph.prebuilt import ToolNode
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -72,3 +77,46 @@ def search_documents(query: str) -> str:
         return "\n".join(results)
     except Exception as e:
         return f"Error: {str(e)}"
+
+class AgentState(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], add_messages]
+
+def call_model(state: AgentState, llm, tools):
+    messages = state["messages"]
+    
+    if tools:
+        llm_with_tools = llm.bind_tools(tools)
+        response = llm_with_tools.invoke(messages)
+    else:
+        response = llm.invoke(messages)
+    
+    return {"messages": [response]}
+
+def should_continue(state: AgentState):
+    messages = state["messages"]
+    last_message = messages[-1]
+    
+    if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
+        return "tools"
+    return "end"
+
+def create_langgraph_agent(llm, system_prompt, has_documents=False):
+    tools = [TavilySearchResults(max_results=3)]
+    
+    if has_documents:
+        tools.append(search_documents)
+    
+    workflow = StateGraph(AgentState)
+    workflow.add_node("agent", lambda state: call_model(state, llm, tools))
+    tool_node = ToolNode(tools)
+    workflow.add_node("tools", tool_node)
+    workflow.set_entry_point("agent")
+    workflow.add_conditional_edges(
+        "agent",
+        should_continue,
+        {"tools": "tools", "end": END}
+    )
+    workflow.add_edge("tools", "agent")
+    app = workflow.compile()
+    
+    return app
