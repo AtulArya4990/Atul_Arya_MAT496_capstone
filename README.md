@@ -60,7 +60,8 @@ Make a short -  3-5 min video of yourself, put it on youtube/googledrive, and pu
 - Very quickly, explain how your agent acts on the input and spits out the output. 
 - show an example run of the agent in the video
 
-
+# video link
+- https://youtu.be/33US5jU95XE
 ## Plan
 
 I plan to execute these steps to complete my project.
