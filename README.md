@@ -70,7 +70,7 @@ I plan to execute these steps to complete my project.
 [DONE] Step 3: Build LangGraph Workflow Structure (ai_agent.py) - Define AgentState with annotated message sequences, create call_model node function for LLM invocation with tool binding, implement should_continue conditional function for routing logic, and set up the StateGraph with proper entry points and edges
 [DONE] Step 4: Implement Autonomous Agent Logic (ai_agent.py) - Create the create_langgraph_agent function to compile the workflow, write enhanced system prompts for intelligent tool selection, implement get_response_from_ai_agent as the main entry point, and add logic for the LLM to autonomously choose between web search, RAG, or direct answers
 [DONE] Step 5: Develop FastAPI Backend (backend.py) - Create RESTful API endpoints for chat, document upload, and health checks, implement CORS middleware for frontend communication, handle document processing and vector store initialization, and manage global state for document availability tracking
-[TODO] Step 6: Create Streamlit Frontend (frontend.py) - Build an intuitive user interface with model selection and configuration options, implement document upload functionality with drag-and-drop support, create real-time chat interface with response display, and add visual indicators for RAG status and tool usage
+[DONE] Step 6: Create Streamlit Frontend (frontend.py) - Build an intuitive user interface with model selection and configuration options, implement document upload functionality with drag-and-drop support, create real-time chat interface with response display, and add visual indicators for RAG status and tool usage
 
 ## Conclusion:
 
